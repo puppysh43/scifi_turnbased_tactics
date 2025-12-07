@@ -1,0 +1,5 @@
+narrow down slimmest core of mgt2e combat to implement as a turn based tactics game
+expand over time
+use tiny galaxy asset pack
+
+
