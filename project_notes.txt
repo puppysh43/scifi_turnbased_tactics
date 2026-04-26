@@ -2,4 +2,11 @@ narrow down slimmest core of mgt2e combat to implement as a turn based tactics g
 expand over time
 use tiny galaxy asset pack
 
+mvp with gameplay features but no rules
+ex. everything has an hp of 10, hits on a coin toss, deals 1 damage, etc
+camera, turn based gameplay, variable sized maps, editor, etc
+then slowly add RPG features
+health system, skill checks to hit, auto fire, cover, etc etc
+then add different equipment, different types etc
+AI is the end goal mechanic
 
