@@ -1,11 +1,19 @@
 //gamestate
+mod events;
+mod gamesystems;
 use egor::{input::Input, math::IVec2};
+use events::Event;
 use hecs::World;
+
+#[derive(Copy, Clone, Debug)]
 pub enum ControlState {
     Moving,
     Reticule(SelectingState),
 }
+
+#[derive(Copy, Clone, Debug)]
 pub enum SelectingState {
+    SelectingUnit,
     Attacking,
 }
 pub struct GameState {
@@ -15,6 +23,7 @@ pub struct GameState {
     ///the left and uppermost tile of the camera view
     camera_pos: IVec2,
     control_state: ControlState,
+    events: Vec<Event>,
 }
 impl GameState {
     ///Creates completely blank gamestate
@@ -23,20 +32,18 @@ impl GameState {
             world: World::new(),
             map: GameMap::new(),
             camera_pos: IVec2::new(0, 0),
+            control_state: ControlState::Reticule(SelectingState::SelectingUnit),
+            events: Vec::new(),
         }
     }
     ///Once implemented will allow a custom level to be loaded from a file
     pub fn from_file() {}
     ///run systems
-    pub fn run(&mut self, input: &Input) {
-        //get input
-    }
     ///draw game to screen
     pub fn draw() {
         //
     }
 }
-fn get_input(state: &mut GameState, input: &Input) {}
 pub struct GameMap {
     ///height of the map
     h: i32,
