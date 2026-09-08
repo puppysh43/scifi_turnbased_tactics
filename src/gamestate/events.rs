@@ -20,6 +20,8 @@ impl MoiAttack {
         (self.attacker, self.defender)
     }
 }
+#[derive(Copy, Clone, PartialEq, Debug)]
+///For moving a
 pub struct MoiMove {
     mover: Entity,
     delta: IVec2,

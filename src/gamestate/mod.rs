@@ -7,6 +7,8 @@ use hecs::World;
 
 #[derive(Copy, Clone, Debug)]
 pub enum ControlState {
+    Root,
+    SelectedUnit,
     Moving,
     Reticule(SelectingState),
 }
@@ -32,7 +34,7 @@ impl GameState {
             world: World::new(),
             map: GameMap::new(),
             camera_pos: IVec2::new(0, 0),
-            control_state: ControlState::Reticule(SelectingState::SelectingUnit),
+            control_state: ControlState::Root,
             events: Vec::new(),
         }
     }
