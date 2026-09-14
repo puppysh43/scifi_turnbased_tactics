@@ -7,6 +7,7 @@ use hecs::Entity;
 ///Tagging component used to mark that a character is currently selected to be controlled by the player
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Selected;
+
 ///Tagging component used to mark the reticule
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Reticule;

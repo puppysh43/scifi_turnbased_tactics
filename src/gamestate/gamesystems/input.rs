@@ -21,6 +21,7 @@ pub fn game_input(gamestate: &mut GameState, input: &mut &Input) {
                 gamestate
                     .world
                     .spawn((Reticule, Position::new(IVec2::new(0, 0))));
+                gamestate.control_state = ControlState::Reticule(SelectingState::SelectingUnit);
             }
         }
         //once the player has selected a unit they can decide what to do with that unit!
@@ -32,6 +33,7 @@ pub fn game_input(gamestate: &mut GameState, input: &mut &Input) {
             //press a to attack
             if input.key_pressed(KeyCode::KeyA) {
                 gamestate.control_state = ControlState::Reticule(SelectingState::Attacking);
+                //spawn in a reticule on the unit position
             }
         }
         //if the player is moving a unit first identify the selected unit and then make the appropriate moi events
@@ -66,33 +68,43 @@ pub fn game_input(gamestate: &mut GameState, input: &mut &Input) {
                     //if enter is pressed on a unit then tag it with the selected component.
                     let delta = get_delta(input);
                     if delta.is_some() {
-                        let mover = gamestate
-                            .world
-                            .query_mut::<(Entity, &Reticule)>()
-                            .into_iter()
-                            .last()
-                            .map(|(entity, _)| entity.clone());
-                        if mover.is_some() {
-                            gamestate.events.push(Event::WantsMove(MoiMove::new(
-                                mover.unwrap(),
-                                delta.unwrap(),
-                            )));
-                        }
+                        move_reticule(gamestate, delta.unwrap());
                     }
                     if input.keys_pressed(&[KeyCode::Enter, KeyCode::NumpadEnter]) {
                         //need to go over this one and chain it together more smoothly
                         //get the position of the reticule
-                        let reticule_pos = get_reticule_pos(&mut gamestate.world);
                         //see if the position of the reticule matches the position of any other entities
-                        let selected_entity =
-                            check_entity_collision(reticule_pos, &mut gamestate.world);
+                        let selected_entity = check_entity_collision(
+                            get_reticule_pos(&mut gamestate.world),
+                            &mut gamestate.world,
+                        );
                         //if so add the selected component to them
-
-                        //then delete all reticules!
+                        if selected_entity.is_some() {
+                            gamestate
+                                .world
+                                .insert_one(selected_entity.unwrap(), Selected);
+                            //then delete all reticules!
+                            delete_reticule(&mut gamestate.world);
+                        }
                     }
                 }
                 SelectingState::Attacking => {
                     //this will happen if a unit is selected
+                    let delta = get_delta(input);
+                    if delta.is_some() {
+                        move_reticule(gamestate, delta.unwrap());
+                    }
+                    if input.keys_pressed(&[KeyCode::Enter, KeyCode::NumpadEnter]) {
+                        //see if the position of the reticule matches any other entities
+                        let attacked_entity = check_entity_collision(
+                            get_reticule_pos(&mut gamestate.world),
+                            &mut gamestate.world,
+                        );
+                        //check if so and then send an attack MOI if there is an entity.
+                        if attacked_entity.is_some() {
+                            //bleh
+                        }
+                    }
                 }
             }
         }
@@ -132,12 +144,15 @@ fn get_delta(input: &mut &Input) -> Option<IVec2> {
 
 ///reusable helper function for getting the position of the reticule, assuming only one exists
 fn get_reticule_pos(world: &mut World) -> IVec2 {
+    //have it get the position and process it!
     let pos = world
-        .query_mut::<With<&IVec2, &Reticule>>()
+        .query_mut::<With<&Position, &Reticule>>()
         .into_iter()
         .last()
         .map(|reticule_pos| reticule_pos.clone());
+
     pos.expect("There is no reticule to get the position of!")
+        .get()
 }
 ///checks if any entities are at the specified point and returns their identity id
 fn check_entity_collision(pos: IVec2, world: &mut World) -> Option<Entity> {
@@ -150,5 +165,62 @@ fn check_entity_collision(pos: IVec2, world: &mut World) -> Option<Entity> {
         }
     }
     colliding_entity
+    /*
+    let mover = gamestate
+        .world
+        .query_mut::<(Entity, &Reticule)>()
+        .into_iter()
+        .last()
+        .map(|(entity, _)| entity.clone());*/
 }
-//deletes the reticule
+///provides a list of all colliding entities given a 2d point,
+fn check_colliding_entity(pos: IVec2, world: &mut World) -> Vec<Entity> {
+    let mut colliding_entities: Vec<Entity> = Vec::new();
+
+    for (entity, entity_position) in world.query_mut::<(Entity, &Position)>() {
+        if entity_position.get() == pos {
+            colliding_entities.push(entity);
+        }
+    }
+    colliding_entities
+}
+///deletes any reticules in the ECS
+fn delete_reticule(world: &mut World) {
+    let mut cmd_buffer = CommandBuffer::new();
+    for entity in world.query_mut::<With<Entity, &Reticule>>() {
+        cmd_buffer.despawn(entity);
+    }
+    cmd_buffer.run_on(world);
+}
+//get the position of the currently selected unit.
+fn get_selected_pos(world: &mut World) -> IVec2 {
+    let selected = world
+        .query_mut::<With<Entity, &Selected>>()
+        .into_iter()
+        .last()
+        .map(|entity| entity.clone());
+    let pos = world
+        .query_one_mut::<&Position>(selected.expect("There is no currently selected unit."))
+        .unwrap();
+    pos.get()
+}
+//get the position as a raw IVec2 of any entity. only use if you're sure the entity has a position!
+fn get_pos(entity: Entity, world: &mut World) -> IVec2 {
+    let pos = world.query_one_mut::<&Position>(entity).unwrap().get();
+    pos
+}
+//given the nature of the game I can safely assume that I will be moving the reticule A Lot.
+//this function should make it very easy and concise to move the reticule around for various actions
+fn move_reticule(gamestate: &mut GameState, delta: IVec2) {
+    let mover = gamestate
+        .world
+        .query_mut::<(Entity, &Reticule)>()
+        .into_iter()
+        .last()
+        .map(|(entity, _)| entity.clone());
+    if mover.is_some() {
+        gamestate
+            .events
+            .push(Event::WantsMove(MoiMove::new(mover.unwrap(), delta)));
+    }
+}

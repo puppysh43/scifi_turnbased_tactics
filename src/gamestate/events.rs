@@ -6,7 +6,9 @@ use hecs::Entity;
 pub enum Event {
     WantsMove(MoiMove),
 }
-
+//in the future maybe have the attacked section just be a position to allow for ballistics,
+//attacking obstacles, shooting through walls, etc.
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct MoiAttack {
     attacker: Entity,
     defender: Entity,
