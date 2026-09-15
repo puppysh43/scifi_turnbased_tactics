@@ -1,10 +1,16 @@
 //this will be where the game systems go I suppose
+mod attacking;
 mod input;
-use crate::{gamestate::GameState, gamesystems::input::game_input};
+mod movement;
+use crate::gamestate::GameState;
 use egor::input::Input;
 impl GameState {
-    pub fn run(&mut self, input: &mut &Input) {
+    pub fn update(&mut self, input: &mut &Input) {
         //get input
-        game_input(self, input);
+        input::system(self, input);
+        //then process moves
+        movement::system(self);
+        //then process attacks
+        attacking::system(self);
     }
 }

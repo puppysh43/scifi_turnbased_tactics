@@ -5,6 +5,7 @@ use hecs::Entity;
 
 pub enum Event {
     WantsMove(MoiMove),
+    WantsAttack(MoiAttack),
 }
 //in the future maybe have the attacked section just be a position to allow for ballistics,
 //attacking obstacles, shooting through walls, etc.

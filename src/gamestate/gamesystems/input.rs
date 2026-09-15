@@ -1,4 +1,8 @@
-//input function
+//TODO current scope is just
+//BE ABLE TO SELECT UNITS
+//BE ABLE TO MOVE CAMERA
+//BE ABLE TO MOVE SELECTED UNITS
+//BE ABLE TO ATTACK OTHER UNITS
 use crate::components::*;
 use crate::gamestate::events::*;
 use crate::gamestate::{ControlState, GameState, SelectingState};
@@ -6,8 +10,8 @@ use egor::input::*;
 use egor::math::IVec2;
 use hecs::*;
 /*reads the input from the frame context and adds messages of intent to the */
-pub fn game_input(gamestate: &mut GameState, input: &mut &Input) {
-    //
+pub fn system(gamestate: &mut GameState, input: &mut &Input) {
+    //all game input is filtered through an enum-exhaustive pattern matching state machine
     match gamestate.control_state {
         ControlState::Root => {
             //in the root state the user can move the camera with the arrow keys and press enter or space
@@ -20,8 +24,65 @@ pub fn game_input(gamestate: &mut GameState, input: &mut &Input) {
             if input.keys_pressed(&[KeyCode::Enter, KeyCode::NumpadEnter, KeyCode::Space]) {
                 gamestate
                     .world
-                    .spawn((Reticule, Position::new(IVec2::new(0, 0))));
+                    .spawn((Reticule, Position::new(gamestate.camera_pos)));
                 gamestate.control_state = ControlState::Reticule(SelectingState::SelectingUnit);
+            }
+        }
+        ControlState::Reticule(selecting_state) => {
+            match selecting_state {
+                SelectingState::SelectingUnit => {
+                    //move the reticule with arrow keys or the numpad
+                    let delta = get_delta(input);
+                    if delta.is_some() {
+                        move_reticule(gamestate, delta.unwrap());
+                    }
+                    //if enter is pressed on a unit then tag it with the selected component.
+                    if input.keys_pressed(&[KeyCode::Enter, KeyCode::NumpadEnter]) {
+                        //need to go over this one and chain it together more smoothly
+                        //get the position of the reticule
+                        //see if the position of the reticule matches the position of any other entities
+                        let selected_entity = check_entity_collision(
+                            get_reticule_pos(&mut gamestate.world),
+                            &mut gamestate.world,
+                        );
+                        //if so add the selected component to them
+                        if selected_entity.is_some() {
+                            gamestate
+                                .world
+                                .insert_one(selected_entity.unwrap(), Selected);
+                            //then delete all reticules!
+                            delete_reticule(&mut gamestate.world);
+                        }
+                    }
+                }
+                SelectingState::Attacking => {
+                    //block for moving the reticule to let them select another unit to attack
+                    let delta = get_delta(input);
+                    if delta.is_some() {
+                        move_reticule(gamestate, delta.unwrap());
+                    }
+                    if input.keys_pressed(&[KeyCode::Enter, KeyCode::NumpadEnter]) {
+                        //see if the position of the reticule matches any other entities
+                        let defender = check_entity_collision(
+                            get_reticule_pos(&mut gamestate.world),
+                            &mut gamestate.world,
+                        );
+                        //check if so and then send an attack MOI if there is an entity.
+                        if defender.is_some() {
+                            //get the currently selected/controlled unit.
+                            let attacker = gamestate
+                                .world
+                                .query_mut::<(Entity, &Selected)>()
+                                .into_iter()
+                                .last()
+                                .map(|(entity, _)| entity.clone());
+                            gamestate.events.push_mut(Event::WantsAttack(MoiAttack::new(
+                                attacker.unwrap(),
+                                defender.unwrap(),
+                            )));
+                        }
+                    }
+                }
             }
         }
         //once the player has selected a unit they can decide what to do with that unit!
@@ -34,6 +95,10 @@ pub fn game_input(gamestate: &mut GameState, input: &mut &Input) {
             if input.key_pressed(KeyCode::KeyA) {
                 gamestate.control_state = ControlState::Reticule(SelectingState::Attacking);
                 //spawn in a reticule on the unit position
+                let selected_pos = get_selected_pos(&mut gamestate.world);
+                gamestate
+                    .world
+                    .spawn((Reticule, Position::new(selected_pos)));
             }
         }
         //if the player is moving a unit first identify the selected unit and then make the appropriate moi events
@@ -59,53 +124,6 @@ pub fn game_input(gamestate: &mut GameState, input: &mut &Input) {
             if input.key_pressed(KeyCode::Escape) {
                 //set the control state back to the menu for after a unit has been selected
                 gamestate.control_state = ControlState::SelectedUnit;
-            }
-        }
-        ControlState::Reticule(selecting_state) => {
-            match selecting_state {
-                SelectingState::SelectingUnit => {
-                    //move the reticule with arrow keys or the numpad
-                    //if enter is pressed on a unit then tag it with the selected component.
-                    let delta = get_delta(input);
-                    if delta.is_some() {
-                        move_reticule(gamestate, delta.unwrap());
-                    }
-                    if input.keys_pressed(&[KeyCode::Enter, KeyCode::NumpadEnter]) {
-                        //need to go over this one and chain it together more smoothly
-                        //get the position of the reticule
-                        //see if the position of the reticule matches the position of any other entities
-                        let selected_entity = check_entity_collision(
-                            get_reticule_pos(&mut gamestate.world),
-                            &mut gamestate.world,
-                        );
-                        //if so add the selected component to them
-                        if selected_entity.is_some() {
-                            gamestate
-                                .world
-                                .insert_one(selected_entity.unwrap(), Selected);
-                            //then delete all reticules!
-                            delete_reticule(&mut gamestate.world);
-                        }
-                    }
-                }
-                SelectingState::Attacking => {
-                    //this will happen if a unit is selected
-                    let delta = get_delta(input);
-                    if delta.is_some() {
-                        move_reticule(gamestate, delta.unwrap());
-                    }
-                    if input.keys_pressed(&[KeyCode::Enter, KeyCode::NumpadEnter]) {
-                        //see if the position of the reticule matches any other entities
-                        let attacked_entity = check_entity_collision(
-                            get_reticule_pos(&mut gamestate.world),
-                            &mut gamestate.world,
-                        );
-                        //check if so and then send an attack MOI if there is an entity.
-                        if attacked_entity.is_some() {
-                            //bleh
-                        }
-                    }
-                }
             }
         }
     }
