@@ -3,6 +3,7 @@
 //BE ABLE TO MOVE CAMERA
 //BE ABLE TO MOVE SELECTED UNITS
 //BE ABLE TO ATTACK OTHER UNITS
+use super::utility::get_pos;
 use crate::components::*;
 use crate::gamestate::events::*;
 use crate::gamestate::{ControlState, GameState, SelectingState};
@@ -221,11 +222,6 @@ fn get_selected_pos(world: &mut World) -> IVec2 {
         .query_one_mut::<&Position>(selected.expect("There is no currently selected unit."))
         .unwrap();
     pos.get()
-}
-//get the position as a raw IVec2 of any entity. only use if you're sure the entity has a position!
-fn get_pos(entity: Entity, world: &mut World) -> IVec2 {
-    let pos = world.query_one_mut::<&Position>(entity).unwrap().get();
-    pos
 }
 //given the nature of the game I can safely assume that I will be moving the reticule A Lot.
 //this function should make it very easy and concise to move the reticule around for various actions

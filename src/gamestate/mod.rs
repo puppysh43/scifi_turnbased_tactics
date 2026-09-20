@@ -1,6 +1,7 @@
 //gamestate
 mod events;
 mod gamesystems;
+mod draw;
 use egor::{input::Input, math::IVec2};
 use events::Event;
 use hecs::World;
@@ -42,9 +43,6 @@ impl GameState {
     pub fn from_file() {}
     ///run systems
     ///draw game to screen
-    pub fn draw() {
-        //
-    }
 }
 pub struct GameMap {
     ///height of the map
@@ -58,7 +56,7 @@ impl GameMap {
         GameMap {
             h: 64,
             w: 128,
-            map: vec![TileType::Floor; 4 * 128],
+            map: vec![TileType::Floor; 64 * 128],
         }
     }
     pub fn blank_with_size(h: i32, w: i32) -> GameMap {
@@ -68,6 +66,7 @@ impl GameMap {
             map: vec![TileType::Floor; (h * w) as usize],
         }
     }
+    pub fn in_bounds()
 }
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TileType {

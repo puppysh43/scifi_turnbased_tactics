@@ -2,6 +2,7 @@
 mod attacking;
 mod input;
 mod movement;
+mod utility;
 use crate::gamestate::GameState;
 use egor::input::Input;
 impl GameState {
