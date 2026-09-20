@@ -1,7 +1,7 @@
 //gamestate
+mod draw;
 mod events;
 mod gamesystems;
-mod draw;
 use egor::{input::Input, math::IVec2};
 use events::Event;
 use hecs::World;
@@ -41,32 +41,38 @@ impl GameState {
     }
     ///Once implemented will allow a custom level to be loaded from a file
     pub fn from_file() {}
-    ///run systems
-    ///draw game to screen
 }
 pub struct GameMap {
     ///height of the map
-    h: i32,
+    height: i32,
     ///width of the map
-    w: i32,
+    width: i32,
     map: Vec<TileType>,
 }
 impl GameMap {
     pub fn new() -> GameMap {
         GameMap {
-            h: 64,
-            w: 128,
+            height: 64,
+            width: 128,
             map: vec![TileType::Floor; 64 * 128],
         }
     }
-    pub fn blank_with_size(h: i32, w: i32) -> GameMap {
+    pub fn blank_with_size(height: i32, width: i32) -> GameMap {
         GameMap {
-            h,
-            w,
-            map: vec![TileType::Floor; (h * w) as usize],
+            height,
+            width,
+            map: vec![TileType::Floor; (height * width) as usize],
         }
     }
-    pub fn in_bounds()
+    pub fn in_bounds(&self, point: IVec2) -> bool {
+        point.x >= 0 && point.x < self.width && point.y >= 0 && point.y < self.height
+    }
+    pub fn get_tile_from_point(&self, point: IVec2) -> &TileType {
+        &self.map[self.get_index(point)]
+    }
+    pub fn get_index(&self, point: IVec2) -> usize {
+        ((point.y * self.width) + point.x) as usize
+    }
 }
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TileType {
