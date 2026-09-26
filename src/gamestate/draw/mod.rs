@@ -10,6 +10,7 @@ pub const CAMERA_WIDTH: i32 = 10;
 //The width of individual tiles in pixels
 const TILE_WIDTH: i32 = 16;
 const TILE_HEIGHT: i32 = 16;
+//fuck it just have it be a fixed map for now who cares
 impl GameState {
     pub fn draw(&self, gfx: &mut Graphics) {
         //

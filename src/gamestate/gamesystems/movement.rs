@@ -27,15 +27,17 @@ pub fn system(gamestate: &mut GameState) {
                     //check if the mover is a reticule, if it is then move the reticule b/c they don't need to worry about collission
                     if is_reticule(mover, &mut gamestate.world) {
                         //fulfill the request to move and update the position of the entity!
+                        move_entity(mover, &mut gamestate.world, potential_pos);
                     } else {
                         //however if it is not a reticule then you need to check for collission with walls and other entities
+                        // check that there are no collisions with entities or map tiles
+                        if !check_map_collision(potential_pos, &gamestate.map)
+                            && !check_entity_collision(potential_pos, &mut gamestate.world)
+                        {
+                            move_entity(mover, &mut gamestate.world, potential_pos);
+                        }
                     }
                 }
-                //keep going if the mover isn't a reticule - now we need to check that the tile the unit is moving into is a floor!
-                //then last but not least check to make sure the unit is not moving into another unit! for now just check if there are any overlapping entities
-                //BUT this will get more complicated in the future
-                //if none of these issues arise you can overwrite the position of the mover and complete the move!
-
                 false //this marks that we are not retaining it and "consuming" the event regardless of if the move is valid
             }
             //if it's any event other the one we're processing
@@ -45,6 +47,7 @@ pub fn system(gamestate: &mut GameState) {
         }
     });
 }
+//in the future maybe collision should have just a binary component for "This can collide" but not relevant right now
 
 fn in_camera_view(camera_pos: IVec2, entity_pos: IVec2) -> bool {
     entity_pos.x >= camera_pos.x
@@ -55,4 +58,31 @@ fn in_camera_view(camera_pos: IVec2, entity_pos: IVec2) -> bool {
 
 fn is_reticule(entity: Entity, world: &mut World) -> bool {
     world.query_one_mut::<&Reticule>(entity).is_ok()
+}
+
+fn move_entity(mover: Entity, world: &mut World, destination: IVec2) {
+    let current_position = world
+        .query_one_mut::<&mut Position>(mover)
+        .expect("Entity being moved doesn't have a position component!");
+    current_position.set(destination);
+    println!(
+        "An entity has moved to x: {} y: {}",
+        destination.x, destination.y
+    );
+}
+
+///checks if the potential new position is a non-enterable tile. returns true if there is a collission and false if there isn't
+fn check_map_collision(potential_pos: IVec2, map: &GameMap) -> bool {
+    map.get_tile_from_point(potential_pos) != &TileType::Floor
+}
+
+///checks if the potential new position overlaps with another entity's position (that is not a reticule). returns true if there is a collission
+fn check_entity_collision(potential_pos: IVec2, world: &mut World) -> bool {
+    let mut collision = false;
+    for entity_pos in world.query_mut::<Without<&Position, &Reticule>>() {
+        if entity_pos.get() == potential_pos {
+            collision = true;
+        }
+    }
+    collision
 }

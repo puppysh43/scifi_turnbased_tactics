@@ -29,6 +29,9 @@ impl Health {
             self.current = self.max;
         }
     }
+    pub fn get(&self) -> i32 {
+        self.current
+    }
 }
 pub struct Weapon {
     dmg: i32,
@@ -42,6 +45,7 @@ impl Weapon {
     }
 }
 
+//really thinking maybe this should just be an ivec2 or at most newtyping
 pub struct Position(IVec2);
 impl Position {
     pub fn new(pos: IVec2) -> Position {
