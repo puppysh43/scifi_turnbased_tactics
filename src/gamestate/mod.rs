@@ -39,8 +39,18 @@ impl GameState {
             events: Vec::new(),
         }
     }
-    ///Once implemented will allow a custom level to be loaded from a file
-    pub fn from_file() {}
+    ///generates a very minimal gamestate for testing stuff
+    pub fn test() -> GameState {
+        GameState {
+            world: test_world(),
+            map: GameMap::blank_with_size(12, 12),
+            camera_pos: IVec2::new(0, 0),
+            control_state: ControlState::Root,
+            events: Vec::new(),
+        }
+    }
+    //Once implemented will allow a custom level to be loaded from a file
+    //pub fn from_file() {}
 }
 pub struct GameMap {
     ///height of the map
@@ -81,3 +91,5 @@ pub enum TileType {
     HalfCover,
     FullCover,
 }
+///makes a very simple test world while building things out
+fn test_world() -> World {}

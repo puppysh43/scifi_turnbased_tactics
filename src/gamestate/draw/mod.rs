@@ -8,8 +8,8 @@ pub const CAMERA_HEIGHT: i32 = 10;
 ///Constant that defines the amount of columns of tiles displayed in the camera's view (how much of a range in x values)
 pub const CAMERA_WIDTH: i32 = 10;
 //The width of individual tiles in pixels
-const TILE_WIDTH: i32 = 16;
-const TILE_HEIGHT: i32 = 16;
+const TILE_WIDTH: i32 = 24;
+const TILE_HEIGHT: i32 = 24;
 //fuck it just have it be a fixed map for now who cares
 impl GameState {
     pub fn draw(&self, gfx: &mut Graphics) {
