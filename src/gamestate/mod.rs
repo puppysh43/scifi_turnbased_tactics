@@ -5,6 +5,7 @@ mod gamesystems;
 use egor::{input::Input, math::IVec2};
 use events::Event;
 use hecs::World;
+use std::collections::HashMap;
 
 #[derive(Copy, Clone, Debug)]
 pub enum ControlState {
@@ -27,6 +28,8 @@ pub struct GameState {
     camera_pos: IVec2,
     control_state: ControlState,
     events: Vec<Event>,
+    ///hashmap of texture id's keyed to human readable strings to pass to .texture() calls on rendering primitives
+        texture_atlas: HashMap<String, usize>,
 }
 impl GameState {
     ///Creates completely blank gamestate
@@ -37,6 +40,7 @@ impl GameState {
             camera_pos: IVec2::new(0, 0),
             control_state: ControlState::Root,
             events: Vec::new(),
+            texture_atlas: HashMap::new(),
         }
     }
     ///generates a very minimal gamestate for testing stuff
@@ -47,6 +51,7 @@ impl GameState {
             camera_pos: IVec2::new(0, 0),
             control_state: ControlState::Root,
             events: Vec::new(),
+            texture_atlas: HashMap::new(),
         }
     }
     //Once implemented will allow a custom level to be loaded from a file
@@ -57,21 +62,21 @@ pub struct GameMap {
     height: i32,
     ///width of the map
     width: i32,
-    map: Vec<TileType>,
+    tiles: Vec<TileType>,
 }
 impl GameMap {
     pub fn new() -> GameMap {
         GameMap {
             height: 64,
             width: 128,
-            map: vec![TileType::Floor; 64 * 128],
+            tiles: vec![TileType::Floor; 64 * 128],
         }
     }
     pub fn blank_with_size(height: i32, width: i32) -> GameMap {
         GameMap {
             height,
             width,
-            map: vec![TileType::Floor; (height * width) as usize],
+            tiles: vec![TileType::Floor; (height * width) as usize],
         }
     }
     pub fn in_bounds(&self, point: IVec2) -> bool {
@@ -92,4 +97,4 @@ pub enum TileType {
     FullCover,
 }
 ///makes a very simple test world while building things out
-fn test_world() -> World {}
+// fn test_world() -> World {}

@@ -61,3 +61,23 @@ impl Position {
         self.0.saturating_add(delta);
     }
 }
+
+#[derive(Clone, PartialEq)]
+pub struct Sprite {
+    sprite_id: String,
+    color: egor::render::Color,
+}
+impl Sprite {
+    ///creates a new sprite.
+    pub fn new(sprite_id: String, color: egor::render::Color) -> Sprite {
+        Sprite { sprite_id, color }
+    }
+    ///provides the sprite_id and egor colorcode necessary to draw it to screen, in that order.
+    pub fn render(&self) -> (String, egor::render::Color) {
+        (self.sprite_id.clone(), self.color.clone())
+    }
+    ///allows you to change the sprite's color by passing it a new one
+    pub fn change_color(&mut self, new_color: egor::render::Color) {
+        self.color = new_color;
+    }
+}
